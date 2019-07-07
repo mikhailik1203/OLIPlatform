@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CodeLite_Project Name="Include" InternalType="">
   <Plugins>
+    <Plugin Name="qmake">
+      <![CDATA[00010001N0005Debug000000000000]]>
+    </Plugin>
     <Plugin Name="CMakePlugin">
       <![CDATA[[{
   "name": "Debug",
@@ -13,9 +16,6 @@
   "parentProject": ""
  }]]]>
     </Plugin>
-    <Plugin Name="qmake">
-      <![CDATA[00010001N0005Debug000000000000]]>
-    </Plugin>
   </Plugins>
   <Description/>
   <Dependencies/>
@@ -23,6 +23,7 @@
     <File Name="OLI_TransportLayerDef.h"/>
     <File Name="OLI_UtilsDefines.h"/>
     <File Name="OLI_MsgDefines.h"/>
+    <File Name="OLI_FinanceDomain.h"/>
   </VirtualDirectory>
   <Settings Type="Static Library">
     <GlobalSettings>
@@ -76,4 +77,5 @@
       </Completion>
     </Configuration>
   </Settings>
+  <Dependencies Name="Debug"/>
 </CodeLite_Project>

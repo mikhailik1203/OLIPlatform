@@ -10,6 +10,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "OLI_UtilsDefines.h"
 
@@ -17,70 +18,154 @@ namespace oli
 {
 namespace msg
 {
-    const std::string MSG_PROTOCOL = "0.0.0.1";
+    const int PROTOCOL_MAJOR_VERSION = 1;
+    const int PROTOCOL_MINOR_VERSION = 1;
+
     
-    /// types of the transport messages
-    enum MessageType{
-        invalid_messageType = 0,
-        /// system messages 1-99
-        /// client messages 100-599
-        clntNewOrderRequest_messageType = 100,
-        clntOrderReplaceRequest_messageType = 101,
-        clntOrderCancelRequest_messageType = 102,
-        /// orderBook messages 600-799
-        obCancelOrder_messageType = 600,
-        obCancelAllOrders_messageType = 601,
-        /// limitChecker messages 800-999
-        lcOrderCancel_messageType = 800,
-        lcCancelAllOrders_messageType = 801,
-        /// securityMaster messages 1000-1199
-        smSecurityData_messageType = 1000,
-        smSecGroupData_messageType = 1001,
-        smMarketData_messageType = 1002,
-        smMarketStatusUpdate_messageType = 1003,
-        /// userManager messages 1200-1399
-        umAccountData_messageType = 1200,
-        umAccountStatusUpdate_messageType = 1201,
-        /// matchingEngine messages 1400-1599
-        meOrderMatched_messageType = 1400,
-        /// positionManager messages 1600-1799
-        pmNewOrderRequest_messageType = 1600,
-        /// OMS messages 1800-1999
-        omsNewOrder_messageType = 1800,
-        omsOrderStatus_messageType = 1801,
-        omsCancelOrder_messageType = 1802,
-        omsReplaceOrder_messageType = 1803,
-        /// OrderBlotter messages 2000-2199
-        obSubscription_messageType = 2000,
-        /// MarketData messages 2200-2399
-        mdSubscription_messageType = 2200,
-        /// MDRates messages 2400-2599
-        mdrSubscription_messageType = 2400,
-        /// PlatformManagement messages 2600-2799
-        pmNotification_messageType = 2600,
-        /// Orchestrator messages 2800-2999
-        oInstanceStop_messageType = 2800
+    class MessageLib{
+    public:
+        static void init();
+        static void deinit();
     };
     
-    /// base class for transport messages
-    class MessageBase
+    class ClntNewOrderRequestMsg;
+    class ClntCancelOrderRequestMsg;
+    class ClntReplaceOrderRequestMsg;
+    class OMSNewOrderMsg;
+    class OMSChangeOrderMsg;
+    class OMSCancelOrderMsg;
+    class OMSOrderStatusMsg;
+    class OMSTradeRejectMsg;
+    class OMSTradeCorrectRejectMsg;
+    class MEOrdersMatchedMsg;
+    class OBBookChangeMsg;
+    class OBBookChangesMsg;
+
+    class AppMessageProcessor{
+    public: 
+        virtual ~AppMessageProcessor(){}
+        
+        virtual void onMessage(ConnectionIdT connId, const msg::ClntNewOrderRequestMsg *msg) = 0;
+        virtual void onMessage(ConnectionIdT connId, const msg::ClntCancelOrderRequestMsg *msg) = 0;
+        virtual void onMessage(ConnectionIdT connId, const msg::ClntReplaceOrderRequestMsg *msg) = 0;
+        
+        virtual void onMessage(ConnectionIdT connId, const msg::OMSNewOrderMsg *msg) = 0;
+        virtual void onMessage(ConnectionIdT connId, const msg::OMSChangeOrderMsg *msg) = 0;
+        virtual void onMessage(ConnectionIdT connId, const msg::OMSCancelOrderMsg *msg) = 0;
+        virtual void onMessage(ConnectionIdT connId, const msg::OMSOrderStatusMsg *msg) = 0;
+        virtual void onMessage(ConnectionIdT connId, const msg::OMSTradeRejectMsg *msg) = 0;
+        virtual void onMessage(ConnectionIdT connId, const msg::OMSTradeCorrectRejectMsg *msg) = 0;
+        
+        virtual void onMessage(ConnectionIdT connId, const msg::OBBookChangeMsg *msg) = 0;
+        virtual void onMessage(ConnectionIdT connId, const msg::OBBookChangesMsg *msg) = 0;
+        
+        virtual void onMessage(ConnectionIdT connId, const msg::MEOrdersMatchedMsg *msg) = 0;
+        
+    };
+
+    class SsnLogonMsg;
+    class SsnHeartBeatMsg;
+    class SsnResendRequestMsg;
+    class SsnSequenceChangeMsg;
+    class SsnLogoutMsg;
+    class SsnRejectMsg;
+    class SsnRetransmittedMsg;
+    
+    class SsnMessageProcessor{
+    public: 
+        virtual ~SsnMessageProcessor(){}
+      
+        virtual void onMessage(ConnectionIdT connId, const SsnLogonMsg *msg) = 0;
+        virtual void onMessage(ConnectionIdT connId, const SsnHeartBeatMsg *msg) = 0;
+        virtual void onMessage(ConnectionIdT connId, const SsnResendRequestMsg *msg) = 0;
+        virtual void onMessage(ConnectionIdT connId, const SsnSequenceChangeMsg *msg) = 0;
+        virtual void onMessage(ConnectionIdT connId, const SsnLogoutMsg *msg) = 0;
+        virtual void onMessage(ConnectionIdT connId, const SsnRejectMsg *msg) = 0;
+        virtual void onMessage(ConnectionIdT connId, const SsnRetransmittedMsg *msg) = 0;
+    };
+    
+    struct ApplicationMsg{
+    public:
+        int type_; /// msg::MessageType
+        //std::string body_;
+        const char *buffer_;
+        size_t bufferLen_;
+        
+        ApplicationMsg();
+        //ApplicationMsg(int type, const std::string &body);
+        ApplicationMsg(int type, const char *buffer, size_t bufferLen);
+        ApplicationMsg(const ApplicationMsg &msg);
+        ~ApplicationMsg();
+    };
+    
+    /// Class is used to encapsulate outgoing message and encode it before send
+    class OutMessageWrapper
     {
     public:
-        MessageBase();
-        ~MessageBase();
-
-        /// returns message type
-        MessageType msgType()const;
+        OutMessageWrapper(int type, const std::string &data);
+        explicit OutMessageWrapper(const msg::ClntNewOrderRequestMsg *msg);
+        explicit OutMessageWrapper(const msg::ClntCancelOrderRequestMsg *msg);
+        explicit OutMessageWrapper(const msg::ClntReplaceOrderRequestMsg *msg);
         
-        /// returns version of the message
-        std::string msgVersion()const;
-    
-        /// returns message data
-        const std::vector<int8T> &message()const;
+        explicit OutMessageWrapper(const msg::OMSNewOrderMsg *msg);
+        explicit OutMessageWrapper(const msg::OMSChangeOrderMsg *msg);
+        explicit OutMessageWrapper(const msg::OMSCancelOrderMsg *msg);
+        explicit OutMessageWrapper(const msg::OMSOrderStatusMsg *msg);
+        explicit OutMessageWrapper(const msg::OMSTradeRejectMsg *msg);
+        explicit OutMessageWrapper(const msg::OMSTradeCorrectRejectMsg *msg);
+        
+        explicit OutMessageWrapper(const msg::OBBookChangeMsg *msg);
+        explicit OutMessageWrapper(const msg::OBBookChangesMsg *msg);
+
+        explicit OutMessageWrapper(const msg::MEOrdersMatchedMsg *msg);
+        
+        explicit OutMessageWrapper(const msg::SsnHeartBeatMsg *msg);
+        explicit OutMessageWrapper(const msg::SsnLogonMsg *msg);
+        explicit OutMessageWrapper(const msg::SsnLogoutMsg *msg);
+        explicit OutMessageWrapper(const msg::SsnResendRequestMsg *msg);
+        explicit OutMessageWrapper(const msg::SsnSequenceChangeMsg *msg);
+        explicit OutMessageWrapper(const msg::SsnRejectMsg *msg);
+        explicit OutMessageWrapper(const msg::SsnRetransmittedMsg *msg);
+        
+        ~OutMessageWrapper();
+
+        const std::string &serialise(const std::string &clientName, 
+                const std::string &ssnName, const std::string &channelName, 
+                oli::int64T seqId)const;
+
+        std::string serialiseToJson(const std::string &clientName,
+                                     const std::string &ssnName, const std::string &channelName,
+                                     oli::int64T seqId)const;
+
+        int messageType()const;
+
+        void setDestinationId(ConnectionIdT connId)const;
+        ConnectionIdT destinationId()const;
     private:
-        MessageType type_;
-        std::string version_;
-        std::vector<int8T> message_;
+        mutable std::string data_;
+        mutable ConnectionIdT connId_;
+        int type_;
+    };
+    
+    class InMessageWrapper
+    {
+    public:
+        InMessageWrapper(const char *data, size_t size);
+        ~InMessageWrapper();
+
+        bool isSessionLevelMsg()const;
+        
+        void handleSsnMessage(ConnectionIdT connId, SsnMessageProcessor &proc)const;
+        void handleAppMessage(ConnectionIdT connId, AppMessageProcessor &proc)const;
+        
+        int channelId()const{return channelId_;}
+        int64_t msgSeqNum()const{return msgSeqNum_;}
+        const std::string &msgBody()const{return msgBody_;}
+    private:
+        int msgType_;
+        int channelId_;
+        int64_t msgSeqNum_;
+        std::string msgBody_;
     };
     
     

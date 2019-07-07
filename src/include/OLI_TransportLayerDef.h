@@ -15,26 +15,21 @@
 #include "OLI_MsgDefines.h"
 
 namespace oli{
+    
     namespace tl{
         
         struct TLDataSource{
             uint64T sourceId_;
         };
     
-        class TLAppObserver{
-        public:    
-            virtual ~TLAppObserver(){}
+        /// Interface for publishing messages to the TL channel
+        class TlMessagePublisher{
+        public:
+            virtual ~TlMessagePublisher(){}
             
-            virtual void onMessage(const TLDataSource &source, const msg::MessageBase &msg) = 0;
+            virtual void sendMessage(ConnectionIdT connId, const oli::msg::OutMessageWrapper &msg) = 0;
         };
-
-        class TLSsnObserver{
-        public:    
-            virtual ~TLSsnObserver(){}
-            
-            virtual void onMessage(int64_t topic, const std::vector<char> &msg) = 0;
-            virtual void onResendRequest() = 0;
-        };
+        
         
     }    
     

@@ -5,15 +5,15 @@
 ## Debug
 ProjectName            :=Include
 ConfigurationName      :=Debug
-WorkspacePath          := "/home/sam1203/projects/OLIPlatform/OLIPlatform"
-ProjectPath            := "/home/sam1203/projects/OLIPlatform/src/include"
+WorkspacePath          := "/home/sam1203/Projects/OLIPlatform/OLIPlatform"
+ProjectPath            := "/home/sam1203/Projects/OLIPlatform/src/include"
 IntermediateDirectory  :=./Debug
 OutDir                 := $(IntermediateDirectory)
 CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=
-Date                   :=26/02/16
+Date                   :=20/11/16
 CodeLitePath           :="/home/sam1203/.codelite"
 LinkerName             :=/usr/bin/g++
 SharedObjectLinkerName :=/usr/bin/g++ -shared -fPIC
@@ -75,8 +75,8 @@ $(OutputFile): $(Objects)
 	@$(MakeDirCommand) $(@D)
 	@echo "" > $(IntermediateDirectory)/.d
 	$(AR) $(ArchiveOutputSwitch)$(OutputFile) @$(ObjectsFileList) $(ArLibs)
-	@$(MakeDirCommand) "/home/sam1203/projects/OLIPlatform/OLIPlatform/.build-debug"
-	@echo rebuilt > "/home/sam1203/projects/OLIPlatform/OLIPlatform/.build-debug/Include"
+	@$(MakeDirCommand) "/home/sam1203/Projects/OLIPlatform/OLIPlatform/.build-debug"
+	@echo rebuilt > "/home/sam1203/Projects/OLIPlatform/OLIPlatform/.build-debug/Include"
 
 MakeIntermediateDirs:
 	@test -d ./Debug || $(MakeDirCommand) ./Debug
