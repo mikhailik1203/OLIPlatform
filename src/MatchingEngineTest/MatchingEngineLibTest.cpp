@@ -120,35 +120,43 @@ namespace{
 
 int main()
 {
-    oli::idT startOrderId = 1234;
-    oli::quantityT startOrderQty = 200;
+        oli::idT startOrderId = 1234;
+        oli::quantityT startOrderQty = 200;
+        oli::priceT startPrice = 5000;
 
-    stick_this_thread_to_core(3);
+        stick_this_thread_to_core(3);
 
-    const size_t PACKAGE_COUNT = 10; //batch, because of the timer granularity
-    const size_t SAMPLES_COUNT = 10000; //20000000
+        const size_t PACKAGE_COUNT = 40; //batch, because of the timer granularity
+        const size_t SAMPLES_COUNT = 1000000; //20000000
+        const size_t ORDER_PER_LEVEL_COUNT = 1000;
 
-    PriceLevelContainer testCont(PACKAGE_COUNT*SAMPLES_COUNT + 1);
+        PriceLevelContainer2Cmp testCont(PACKAGE_COUNT*ORDER_PER_LEVEL_COUNT + 1);
 
-    MDLevel2Record order2Add;
-    order2Add.id_ = startOrderId;
-    order2Add.price_ = 5000;
-    order2Add.qty_ = startOrderQty;
-    order2Add.side_ = oli::Side::buy_Side;
-    order2Add.type_ = MDUpdateType::add_MDUpdateType;
+        MDLevel2Record order2Add;
+        order2Add.id_ = startOrderId;
+        order2Add.price_ = startPrice;
+        order2Add.qty_ = startOrderQty;
+        order2Add.side_ = oli::Side::buy_Side;
+        order2Add.type_ = MDUpdateType::add_MDUpdateType;
 
-    sleep(2);
-    int32_t val = 0;
-    PerfTestScenario perfTestCase;
-    perfTestCase.execute(PACKAGE_COUNT, SAMPLES_COUNT, [&](){
-        ++order2Add.id_;
-        order2Add.qty_ += 10;
-        testCont.add(order2Add);
-    }, [&](){
-    });
+        sleep(2);
+        int32_t val = 0;
+        int32_t orderCount = 0;
+        PerfTestScenario perfTestCase;
+        perfTestCase.execute(PACKAGE_COUNT, SAMPLES_COUNT, [&](){
+            ++order2Add.id_;
+            order2Add.qty_ += 10;
+            order2Add.price_ += 100;
+            testCont.add(order2Add);
+        }, [&](){
+            ++orderCount;
+            order2Add.price_ = startPrice;
+            if(0 == orderCount%ORDER_PER_LEVEL_COUNT)
+                testCont.clear();
+        });
 
-    std::cout << "Latency of PriceLevelContainer::AddOrderSamePrice_10Package processing:" << std::endl;
-    perfTestCase.writeResult();
+        std::cout << "Latency of PriceLevelContainer::AddOrderDiffPrices_40Price_1kOrderPackage processing:" << std::endl;
+        perfTestCase.writeResult();
 
     return 0;
 }

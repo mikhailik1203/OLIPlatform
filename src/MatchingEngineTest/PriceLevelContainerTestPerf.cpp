@@ -371,12 +371,14 @@ BOOST_AUTO_TEST_SUITE( PriceLevelContainerPerf )
 
     BOOST_AUTO_TEST_CASE( PriceLevelContainer_LastUsedShiftCheck )
     {
-        /*todo: fix it
-        BOOST_CHECK(0 == getLastUsedIndexCLZ(0));
+        std::cout<< "PriceLevelContainer_LastUsedShiftCheck "<< (int)getLastUsedIndexCLZ(1)<< std::endl;
+        /// result is undefined for 0 value
+        //BOOST_CHECK(15 == getLastUsedIndexCLZ(0));
+        BOOST_CHECK(0 == getLastUsedIndexCLZ(1));
         BOOST_CHECK(31 == getLastUsedIndexCLZ(0xFFFFFFFF));
         for(int i = 31; i > 1; --i){
             BOOST_CHECK(i == getLastUsedIndexCLZ(1 << i));
-        }*/
+        }
     }
 
 /*    BOOST_AUTO_TEST_CASE( PriceLevelContainer_LastUsedIndex )
@@ -640,7 +642,7 @@ BOOST_AUTO_TEST_SUITE( PriceLevelContainerPerf )
 
     }
 
-    BOOST_AUTO_TEST_CASE( PriceLevelContainer_AddOrderDiffPrices_20Package)
+    BOOST_AUTO_TEST_CASE( PriceLevelContainer_AddOrderDiffPrices_40Price_1kOrderPackage)
     {
         oli::idT startOrderId = 1234;
         oli::quantityT startOrderQty = 200;
@@ -648,10 +650,11 @@ BOOST_AUTO_TEST_SUITE( PriceLevelContainerPerf )
 
         stick_this_thread_to_core(3);
 
-        const size_t PACKAGE_COUNT = 20; //batch, because of the timer granularity
-        const size_t SAMPLES_COUNT = 10000; //20000000
+        const size_t PACKAGE_COUNT = 40; //batch, because of the timer granularity
+        const size_t SAMPLES_COUNT = 1000000; //20000000
+        const size_t ORDER_PER_LEVEL_COUNT = 1000;
 
-        PriceLevelContainer testCont(PACKAGE_COUNT*SAMPLES_COUNT + 1);
+        PriceLevelContainer testCont(PACKAGE_COUNT*ORDER_PER_LEVEL_COUNT + 1);
 
         MDLevel2Record order2Add;
         order2Add.id_ = startOrderId;
@@ -662,6 +665,7 @@ BOOST_AUTO_TEST_SUITE( PriceLevelContainerPerf )
 
         sleep(2);
         int32_t val = 0;
+        int32_t orderCount = 0;
         PerfTestScenario perfTestCase;
         perfTestCase.execute(PACKAGE_COUNT, SAMPLES_COUNT, [&](){
             ++order2Add.id_;
@@ -669,15 +673,18 @@ BOOST_AUTO_TEST_SUITE( PriceLevelContainerPerf )
             order2Add.price_ += 100;
             testCont.add(order2Add);
         }, [&](){
+            ++orderCount;
             order2Add.price_ = startPrice;
+            if(0 == orderCount%ORDER_PER_LEVEL_COUNT)
+                testCont.clear();
         });
 
-        std::cout << "Latency of PriceLevelContainer::AddOrderDiffPrices_20Package processing:" << std::endl;
+        std::cout << "Latency of PriceLevelContainer::AddOrderDiffPrices_40Price_1kOrderPackage processing:" << std::endl;
         perfTestCase.writeResult();
 
     }
 
-    BOOST_AUTO_TEST_CASE( PriceLevelContainer2Cmp_AddOrderDiffPrices_20Package)
+    BOOST_AUTO_TEST_CASE( PriceLevelContainer2Cmp_AddOrderDiffPrices_40Price_1kOrderPackage)
     {
         oli::idT startOrderId = 1234;
         oli::quantityT startOrderQty = 200;
@@ -685,10 +692,11 @@ BOOST_AUTO_TEST_SUITE( PriceLevelContainerPerf )
 
         stick_this_thread_to_core(3);
 
-        const size_t PACKAGE_COUNT = 20; //batch, because of the timer granularity
-        const size_t SAMPLES_COUNT = 10000; //20000000
+        const size_t PACKAGE_COUNT = 40; //batch, because of the timer granularity
+        const size_t SAMPLES_COUNT = 1000000; //20000000
+        const size_t ORDER_PER_LEVEL_COUNT = 1000;
 
-        PriceLevelContainer2Cmp testCont(PACKAGE_COUNT*SAMPLES_COUNT + 1);
+        PriceLevelContainer2Cmp testCont(PACKAGE_COUNT*ORDER_PER_LEVEL_COUNT + 1);
 
         MDLevel2Record order2Add;
         order2Add.id_ = startOrderId;
@@ -699,6 +707,7 @@ BOOST_AUTO_TEST_SUITE( PriceLevelContainerPerf )
 
         sleep(2);
         int32_t val = 0;
+        int32_t orderCount = 0;
         PerfTestScenario perfTestCase;
         perfTestCase.execute(PACKAGE_COUNT, SAMPLES_COUNT, [&](){
             ++order2Add.id_;
@@ -706,10 +715,82 @@ BOOST_AUTO_TEST_SUITE( PriceLevelContainerPerf )
             order2Add.price_ += 100;
             testCont.add(order2Add);
         }, [&](){
+            ++orderCount;
             order2Add.price_ = startPrice;
+            if(0 == orderCount%ORDER_PER_LEVEL_COUNT)
+                testCont.clear();
         });
 
-        std::cout << "Latency of PriceLevelContainer2Cmp::AddOrderDiffPrices_20Package processing:" << std::endl;
+        std::cout << "Latency of PriceLevelContainer2Cmp::AddOrderDiffPrices_40Package processing:" << std::endl;
+        perfTestCase.writeResult();
+
+    }
+
+
+    BOOST_AUTO_TEST_CASE( PriceLevelContainer_RemoveOrderDiffPrices_40Price_1kOrderPackage)
+    {
+        oli::idT startOrderId = 1234;
+        oli::quantityT startOrderQty = 200;
+        oli::priceT startPrice = 5000;
+
+        stick_this_thread_to_core(3);
+
+        const size_t PACKAGE_COUNT = 40; //batch, because of the timer granularity
+        const size_t SAMPLES_COUNT = 1000000; //20000000
+        const size_t ORDER_PER_LEVEL_COUNT = 1000;
+
+        PriceLevelContainer testCont(PACKAGE_COUNT*ORDER_PER_LEVEL_COUNT + 1);
+
+        MDLevel2Record order2Add;
+        order2Add.id_ = startOrderId;
+        order2Add.price_ = startPrice;
+        order2Add.qty_ = startOrderQty;
+        order2Add.side_ = oli::Side::buy_Side;
+        order2Add.type_ = MDUpdateType::add_MDUpdateType;
+
+        for(int i = 1; i < PACKAGE_COUNT*ORDER_PER_LEVEL_COUNT + 1; ++i){
+            ++order2Add.id_;
+            order2Add.qty_ += 10;
+            order2Add.price_ += 100;
+            testCont.add(order2Add);
+            if(0 == i%PACKAGE_COUNT)
+                order2Add.price_ = startPrice;
+        }
+
+        MDLevel2Record order2Remove;
+        order2Remove.id_ = startOrderId;
+        order2Remove.price_ = startPrice;
+        order2Remove.qty_ = startOrderQty;
+        order2Remove.side_ = oli::Side::buy_Side;
+        order2Remove.type_ = MDUpdateType::remove_MDUpdateType;
+
+
+        sleep(2);
+        int32_t val = 0;
+        int32_t orderCount = 0;
+        PerfTestScenario perfTestCase;
+        perfTestCase.execute(PACKAGE_COUNT, SAMPLES_COUNT, [&](){
+            ++order2Remove.id_;
+            order2Remove.qty_ += 10;
+            order2Remove.price_ += 100;
+            testCont.remove(order2Remove);
+        }, [&](){
+            order2Remove.price_ = startPrice;
+            ++orderCount;
+
+            if(0 == orderCount%ORDER_PER_LEVEL_COUNT){
+                for(int i = 1; i < PACKAGE_COUNT*ORDER_PER_LEVEL_COUNT + 1; ++i){
+                    ++order2Add.id_;
+                    order2Add.qty_ += 10;
+                    order2Add.price_ += 100;
+                    testCont.add(order2Add);
+                    if(0 == i%PACKAGE_COUNT)
+                        order2Add.price_ = startPrice;
+                }
+            }
+        });
+
+        std::cout << "Latency of PriceLevelContainer::AddOrderDiffPrices_40Price_1kOrderPackage processing:" << std::endl;
         perfTestCase.writeResult();
 
     }

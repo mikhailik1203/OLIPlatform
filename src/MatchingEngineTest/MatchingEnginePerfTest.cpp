@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_SUITE( MatchAdaptorTest )
         obChangeMsg.set_volume(200000000);
         obChangeMsg.set_prevprice(0);
         obChangeMsg.set_prevvolume(0);
-        testAdapt.onMessage(&obChangeMsg);
+        testAdapt.onMessage(1, &obChangeMsg);
 
         oli::idT orderId = 12345;
         const size_t PACKAGE_COUNT = 4; //batch, because of the timer granularity
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_SUITE( MatchAdaptorTest )
             omsNewOrderMsg.set_volumeleft(1);
             omsNewOrderMsg.set_ordtype(marketOrderType);
 
-            testAdapt.onMessage(&omsNewOrderMsg);
+            testAdapt.onMessage(1, &omsNewOrderMsg);
         }, [](){});
 
         std::cout << "Latency of Market order processing:" << std::endl;
@@ -191,21 +191,21 @@ BOOST_AUTO_TEST_SUITE( MatchAdaptorTest )
         obChangeMsg.set_volume(300);
         obChangeMsg.set_prevprice(0);
         obChangeMsg.set_prevvolume(0);
-        testAdapt.onMessage(&obChangeMsg);
+        testAdapt.onMessage(1, &obChangeMsg);
         obChangeMsg.set_type(add_OBookChangeType);
         obChangeMsg.set_orderid(98764);
         obChangeMsg.set_volume(300);
-        testAdapt.onMessage(&obChangeMsg);
+        testAdapt.onMessage(1, &obChangeMsg);
         obChangeMsg.set_type(add_OBookChangeType);
         obChangeMsg.set_orderid(98763);
         obChangeMsg.set_price(priceLvl2);
         obChangeMsg.set_volume(300);
-        testAdapt.onMessage(&obChangeMsg);
+        testAdapt.onMessage(1, &obChangeMsg);
         obChangeMsg.set_type(add_OBookChangeType);
         obChangeMsg.set_orderid(98762);
         obChangeMsg.set_price(priceLvl2);
         obChangeMsg.set_volume(300);
-        testAdapt.onMessage(&obChangeMsg);
+        testAdapt.onMessage(1, &obChangeMsg);
 
         oli::idT orderId = 12345;
         const size_t PACKAGE_COUNT = 4; //batch, because of the timer granularity
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_SUITE( MatchAdaptorTest )
                     omsNewOrderMsg.set_volumeleft(1200);
                     omsNewOrderMsg.set_ordtype(marketOrderType);
 
-                    testAdapt.onMessage(&omsNewOrderMsg);
+                    testAdapt.onMessage(1, &omsNewOrderMsg);
                 },
                 [&](){
                     /// restore order book
@@ -229,22 +229,22 @@ BOOST_AUTO_TEST_SUITE( MatchAdaptorTest )
                     obChangeMsg.set_orderid(98765);
                     obChangeMsg.set_price(price);
                     obChangeMsg.set_volume(300);
-                    testAdapt.onMessage(&obChangeMsg);
+                    testAdapt.onMessage(1, &obChangeMsg);
                     obChangeMsg.set_type(change_OBookChangeType);
                     obChangeMsg.set_orderid(98764);
                     obChangeMsg.set_price(price);
                     obChangeMsg.set_volume(300);
-                    testAdapt.onMessage(&obChangeMsg);
+                    testAdapt.onMessage(1, &obChangeMsg);
                     obChangeMsg.set_type(change_OBookChangeType);
                     obChangeMsg.set_orderid(98763);
                     obChangeMsg.set_price(priceLvl2);
                     obChangeMsg.set_volume(300);
-                    testAdapt.onMessage(&obChangeMsg);
+                    testAdapt.onMessage(1, &obChangeMsg);
                     obChangeMsg.set_type(change_OBookChangeType);
                     obChangeMsg.set_orderid(98762);
                     obChangeMsg.set_price(priceLvl2);
                     obChangeMsg.set_volume(300);
-                    testAdapt.onMessage(&obChangeMsg);
+                    testAdapt.onMessage(1, &obChangeMsg);
                 });
 
         std::cout << "Latency of Market order processing:" << std::endl;
@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_SUITE( MatchAdaptorTest )
         obChangeMsg.set_volume(200000000);
         obChangeMsg.set_prevprice(0);
         obChangeMsg.set_prevvolume(0);
-        testAdapt.onMessage(&obChangeMsg);
+        testAdapt.onMessage(1, &obChangeMsg);
 
         oli::idT orderId = 12345;
         const size_t PACKAGE_COUNT = 4; //batch, because of the timer granularity
@@ -291,7 +291,7 @@ BOOST_AUTO_TEST_SUITE( MatchAdaptorTest )
                     omsNewOrderMsg.set_volumeleft(1);
                     omsNewOrderMsg.set_ordtype(limitOrderType);
 
-                    testAdapt.onMessage(&omsNewOrderMsg);
+                    testAdapt.onMessage(1, &omsNewOrderMsg);
                 },
                 [&](){});
 
@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_SUITE( MatchAdaptorTest )
                                  obChangeMsg.set_volume(300);
                                  obChangeMsg.set_prevprice(0);
                                  obChangeMsg.set_prevvolume(0);
-                                 testAdapt.onMessage(&obChangeMsg);
+                                 testAdapt.onMessage(1, &obChangeMsg);
 
                                  obChangeMsg.set_type(add_OBookChangeType);
                                  obChangeMsg.set_side(buySide);
@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_SUITE( MatchAdaptorTest )
                                  obChangeMsg.set_volume(300);
                                  obChangeMsg.set_prevprice(0);
                                  obChangeMsg.set_prevvolume(0);
-                                 testAdapt.onMessage(&obChangeMsg);
+                                 testAdapt.onMessage(1, &obChangeMsg);
 
                                  obChangeMsg.set_type(add_OBookChangeType);
                                  obChangeMsg.set_side(buySide);
@@ -351,7 +351,7 @@ BOOST_AUTO_TEST_SUITE( MatchAdaptorTest )
                                  obChangeMsg.set_volume(300);
                                  obChangeMsg.set_prevprice(0);
                                  obChangeMsg.set_prevvolume(0);
-                                 testAdapt.onMessage(&obChangeMsg);
+                                 testAdapt.onMessage(1, &obChangeMsg);
                              },
                              [&](){
                                  /// restore order book
@@ -359,13 +359,13 @@ BOOST_AUTO_TEST_SUITE( MatchAdaptorTest )
                                  obChangeMsg.set_side(buySide);
                                  obChangeMsg.set_type(delete_OBookChangeType);
                                  obChangeMsg.set_orderid(orderId - 1);
-                                 testAdapt.onMessage(&obChangeMsg);
+                                 testAdapt.onMessage(1, &obChangeMsg);
                                  obChangeMsg.set_type(delete_OBookChangeType);
                                  obChangeMsg.set_orderid(orderId - 2);
-                                 testAdapt.onMessage(&obChangeMsg);
+                                 testAdapt.onMessage(1, &obChangeMsg);
                                  obChangeMsg.set_type(delete_OBookChangeType);
                                  obChangeMsg.set_orderid(orderId - 3);
-                                 testAdapt.onMessage(&obChangeMsg);
+                                 testAdapt.onMessage(1, &obChangeMsg);
                              });
 
         std::cout << "Latency of Add order to OB processing:" << std::endl;
@@ -408,7 +408,7 @@ BOOST_AUTO_TEST_SUITE( MatchAdaptorTest )
                 obChangeMsg.set_volume(300);
                 obChangeMsg.set_prevprice(0);
                 obChangeMsg.set_prevvolume(0);
-                testAdapt.onMessage(&obChangeMsg);
+                testAdapt.onMessage(1, &obChangeMsg);
 
                 obChangeMsg.set_type(add_OBookChangeType);
                 obChangeMsg.set_side(buySide);
@@ -418,7 +418,7 @@ BOOST_AUTO_TEST_SUITE( MatchAdaptorTest )
                 obChangeMsg.set_volume(300);
                 obChangeMsg.set_prevprice(0);
                 obChangeMsg.set_prevvolume(0);
-                testAdapt.onMessage(&obChangeMsg);
+                testAdapt.onMessage(1, &obChangeMsg);
 
                 obChangeMsg.set_type(add_OBookChangeType);
                 obChangeMsg.set_side(buySide);
@@ -428,7 +428,7 @@ BOOST_AUTO_TEST_SUITE( MatchAdaptorTest )
                 obChangeMsg.set_volume(300);
                 obChangeMsg.set_prevprice(0);
                 obChangeMsg.set_prevvolume(0);
-                testAdapt.onMessage(&obChangeMsg);
+                testAdapt.onMessage(1, &obChangeMsg);
             }
             high_resolution_clock::time_point t2 = high_resolution_clock::now();
             duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
@@ -440,13 +440,13 @@ BOOST_AUTO_TEST_SUITE( MatchAdaptorTest )
             obChangeMsg.set_price(price);
             obChangeMsg.set_type(delete_OBookChangeType);
             obChangeMsg.set_orderid(orderId - 1);
-            testAdapt.onMessage(&obChangeMsg);
+            testAdapt.onMessage(1, &obChangeMsg);
             obChangeMsg.set_type(delete_OBookChangeType);
             obChangeMsg.set_orderid(orderId - 2);
-            testAdapt.onMessage(&obChangeMsg);
+            testAdapt.onMessage(1, &obChangeMsg);
             obChangeMsg.set_type(delete_OBookChangeType);
             obChangeMsg.set_orderid(orderId - 3);
-            testAdapt.onMessage(&obChangeMsg);
+            testAdapt.onMessage(1, &obChangeMsg);
         }
 
         std::sort(durSamples.begin(), durSamples.end());
