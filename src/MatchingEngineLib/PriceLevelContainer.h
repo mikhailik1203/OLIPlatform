@@ -44,6 +44,8 @@ namespace oli {
             PriceLevelIterator begin();
             PriceLevelIterator end();
 
+            void clear();
+
         public:
             size_t getNext(size_t currIdx)const;
             OrderData &orderData(size_t currIdx);
@@ -53,7 +55,6 @@ namespace oli {
                 size_t prevBlockIdx_;
                 size_t nextBlockIdx_;
                 uint32_t orderMask_;
-                //oli::Side side_;
 
                 PriceBlockInfo():
                         priceLevel_(0), prevBlockIdx_(0), nextBlockIdx_(0), orderMask_(0)
@@ -72,11 +73,15 @@ namespace oli {
             struct PriceLevelInfo {
                 size_t firstBlockIdx_;
                 size_t lastBlockIdx_;
+                PriceBlockInfo *firstBlock_;
+                PriceBlockInfo *lastBlock_;
 
-                PriceLevelInfo(): firstBlockIdx_(0), lastBlockIdx_(0)
+                PriceLevelInfo():
+                        firstBlockIdx_(0), lastBlockIdx_(0), firstBlock_(nullptr), lastBlock_(nullptr)
                 {}
-                PriceLevelInfo(size_t fstBlockIdx, size_t lstBlockIdx):
-                        firstBlockIdx_(fstBlockIdx), lastBlockIdx_(lstBlockIdx)
+                PriceLevelInfo(size_t fstBlockIdx, size_t lstBlockIdx, PriceBlockInfo *firstBlock, PriceBlockInfo *lastBlock):
+                        firstBlockIdx_(fstBlockIdx), lastBlockIdx_(lstBlockIdx), firstBlock_(firstBlock),
+                        lastBlock_(lastBlock)
                 {}
             };
             typedef std::map<oli::priceT, PriceLevelInfo> Price2PriceLevelInfosT;
@@ -91,10 +96,10 @@ namespace oli {
             PriceBlocksT freePriceLevels_;
 
             OrderId2IndexT order2Index_;
-            PriceBlocksT freePriceBlocks_;
+            size_t maxOrderCount_;
         };
 
-
+        /// trivial implementation for priceLevel container to compare performance with PriceLevelContainer
         class PriceLevelContainer2Cmp {
         public:
             explicit PriceLevelContainer2Cmp(size_t orderCount = 1024);
@@ -104,7 +109,7 @@ namespace oli {
             void remove(const MDLevel2Record &order);
             void update(const MDLevel2Record &order);
 
-
+            void clear();
         public:
             size_t getNext(size_t currIdx)const;
             OrderData &orderData(size_t currIdx);
@@ -139,6 +144,7 @@ namespace oli {
         private:
             BidOrderBookT priceLevels_;
             OrderId2PositionT orderIds_;
+            size_t maxOrderCount_;
         };
 
     }

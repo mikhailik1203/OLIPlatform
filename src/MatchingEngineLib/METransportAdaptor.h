@@ -6,6 +6,7 @@
 #define MATCHINGENGINELIB_METRANSPORTADAPTOR_H
 
 #include "OLI_TransportLayerDef.h"
+#include "OLI_MsgDefines.h"
 #include "MatchingEngineDef.h"
 
 namespace oli {
@@ -20,19 +21,21 @@ namespace oli {
 
         public:
             /// implementation of the msg::AppMessageProcessor
-            virtual void onMessage(const msg::ClntNewOrderRequestMsg *msg) override;
-            virtual void onMessage(const msg::ClntCancelOrderRequestMsg *msg) override;
-            virtual void onMessage(const msg::ClntReplaceOrderRequestMsg *msg) override;
+            virtual void onMessage(ConnectionIdT connId, const msg::ClntNewOrderRequestMsg *msg) override;
+            virtual void onMessage(ConnectionIdT connId, const msg::ClntCancelOrderRequestMsg *msg) override;
+            virtual void onMessage(ConnectionIdT connId, const msg::ClntReplaceOrderRequestMsg *msg) override;
 
-            virtual void onMessage(const msg::OMSNewOrderMsg *msg) override;
-            virtual void onMessage(const msg::OMSChangeOrderMsg *msg) override;
-            virtual void onMessage(const msg::OMSCancelOrderMsg *msg) override;
-            virtual void onMessage(const msg::OMSOrderStatusMsg *msg) override;
+            virtual void onMessage(ConnectionIdT connId, const msg::OMSNewOrderMsg *msg) override;
+            virtual void onMessage(ConnectionIdT connId, const msg::OMSChangeOrderMsg *msg) override;
+            virtual void onMessage(ConnectionIdT connId, const msg::OMSCancelOrderMsg *msg) override;
+            virtual void onMessage(ConnectionIdT connId, const msg::OMSOrderStatusMsg *msg) override;
+            virtual void onMessage(ConnectionIdT connId, const msg::OMSTradeRejectMsg *msg) override;
+            virtual void onMessage(ConnectionIdT connId, const msg::OMSTradeCorrectRejectMsg *msg) override;
 
-            virtual void onMessage(const msg::OBBookChangeMsg *msg) override;
-            virtual void onMessage(const msg::OBBookChangesMsg *msg) override;
+            virtual void onMessage(ConnectionIdT connId, const msg::OBBookChangeMsg *msg) override;
+            virtual void onMessage(ConnectionIdT connId, const msg::OBBookChangesMsg *msg) override;
 
-            virtual void onMessage(const msg::MEOrdersMatchedMsg *msg) override;
+            virtual void onMessage(ConnectionIdT connId, const msg::MEOrdersMatchedMsg *msg) override;
 
         public:
             /// implementation of IOutMEObserver

@@ -36,22 +36,22 @@ METransportAdaptor::~METransportAdaptor()
 
 }
 
-void METransportAdaptor::onMessage(const msg::ClntNewOrderRequestMsg */*msg*/)
+void METransportAdaptor::onMessage(ConnectionIdT connId, const msg::ClntNewOrderRequestMsg */*msg*/)
 {
     /// matching engine ignores this message
 }
 
-void METransportAdaptor::onMessage(const msg::ClntCancelOrderRequestMsg */*msg*/)
+void METransportAdaptor::onMessage(ConnectionIdT connId, const msg::ClntCancelOrderRequestMsg */*msg*/)
 {
     /// matching engine ignores this message
 }
 
-void METransportAdaptor::onMessage(const msg::ClntReplaceOrderRequestMsg */*msg*/)
+void METransportAdaptor::onMessage(ConnectionIdT connId, const msg::ClntReplaceOrderRequestMsg */*msg*/)
 {
     /// matching engine ignores this message
 }
 
-void METransportAdaptor::onMessage(const msg::OMSNewOrderMsg *msg)
+void METransportAdaptor::onMessage(ConnectionIdT connId, const msg::OMSNewOrderMsg *msg)
 {
     switch(msg->ordtype()){
         case oli::msg::marketOrderType:
@@ -76,22 +76,22 @@ void METransportAdaptor::onMessage(const msg::OMSNewOrderMsg *msg)
     };
 }
 
-void METransportAdaptor::onMessage(const msg::OMSChangeOrderMsg */*msg*/)
+void METransportAdaptor::onMessage(ConnectionIdT connId, const msg::OMSChangeOrderMsg */*msg*/)
 {
     /// matching engine ignores this message
 }
 
-void METransportAdaptor::onMessage(const msg::OMSCancelOrderMsg */*msg*/)
+void METransportAdaptor::onMessage(ConnectionIdT connId, const msg::OMSCancelOrderMsg */*msg*/)
 {
     /// matching engine ignores this message
 }
 
-void METransportAdaptor::onMessage(const msg::OMSOrderStatusMsg */*msg*/)
+void METransportAdaptor::onMessage(ConnectionIdT connId, const msg::OMSOrderStatusMsg */*msg*/)
 {
     /// matching engine ignores this message
 }
 
-void METransportAdaptor::onMessage(const msg::OBBookChangeMsg *msg)
+void METransportAdaptor::onMessage(ConnectionIdT connId, const msg::OBBookChangeMsg *msg)
 {
     assert(nullptr != msg);
     obookObs_->onOBookChanged(MDLevel2Record(toMDUpdateType(msg->type()), msg->orderid(),
@@ -99,18 +99,30 @@ void METransportAdaptor::onMessage(const msg::OBBookChangeMsg *msg)
                               msg->price()));
 }
 
-void METransportAdaptor::onMessage(const msg::OBBookChangesMsg *msg)
+void METransportAdaptor::onMessage(ConnectionIdT connId, const msg::OBBookChangesMsg *msg)
 {
     MDLevel2Record data;
     obookObs_->onOBookChanged(data);
 }
 
-void METransportAdaptor::onMessage(const msg::MEOrdersMatchedMsg */*msg*/)
+void METransportAdaptor::onMessage(ConnectionIdT connId, const msg::MEOrdersMatchedMsg */*msg*/)
 {
     /// matching engine ignores this message
 }
+
+void METransportAdaptor::onMessage(ConnectionIdT connId, const msg::OMSTradeRejectMsg *msg)
+{
+    /// matching engine ignores this message
+}
+
+void METransportAdaptor::onMessage(ConnectionIdT connId, const msg::OMSTradeCorrectRejectMsg *msg)
+{
+/// matching engine ignores this message
+}
+
 
 void METransportAdaptor::onOrdersMatched(const OrderMatchEvent &)
 {
     ///todo: send message to he transportLayer
 }
+

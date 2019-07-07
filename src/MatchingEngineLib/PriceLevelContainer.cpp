@@ -64,6 +64,8 @@ namespace{
         return 0;
     }
     char getLastUsedIndex(uint32_t val){
+        /// val (orderMask) always contains PriceBlockInfo in first bits, so __builtin_clz
+        /// return value is less than LAST_ORDER_INDEX_IN_BLOCK
         int res = LAST_ORDER_INDEX_IN_BLOCK - __builtin_clz(val);
         return res;
     }
@@ -128,10 +130,11 @@ OrderData &PriceLevelIterator::data()const
 
 PriceLevelContainer::PriceLevelContainer(size_t orderCount):
         priceLevels_(((orderCount + orderCount*0.2)/64 + 1)*64, OrderData()),
-        freePriceLevels_(((orderCount + orderCount*0.2)/64 + 1)*64/ORDER_COUNT_IN_BLOCK - 1, 0)
+        freePriceLevels_(((orderCount + orderCount*0.2)/64 + 1)*64/ORDER_COUNT_IN_BLOCK - 1, 0),
+        maxOrderCount_(0)
 {
-    size_t ordCount = ((orderCount + orderCount*0.2)/64 + 1)*64;
-    order2Index_.reserve(ordCount);
+    maxOrderCount_ = ((orderCount + orderCount*0.2)/64 + 1)*64;
+    order2Index_.reserve(maxOrderCount_*1.3);
     size_t v = INVALID_ORDER_INDEX;
     std::generate (freePriceLevels_.begin(), freePriceLevels_.end(), [&]()->size_t{
         v += ORDER_COUNT_IN_BLOCK;
@@ -143,6 +146,20 @@ PriceLevelContainer::~PriceLevelContainer()
 {
 }
 
+void PriceLevelContainer::clear()
+{
+    order2Index_.clear();
+    order2Index_.reserve(maxOrderCount_*1.3);
+    priceLevelInfos_.clear();
+    freePriceLevels_.clear();
+    freePriceLevels_.resize(maxOrderCount_/ORDER_COUNT_IN_BLOCK - 1);
+    size_t v = INVALID_ORDER_INDEX;
+    std::generate (freePriceLevels_.begin(), freePriceLevels_.end(), [&]()->size_t{
+        v += ORDER_COUNT_IN_BLOCK;
+        return v;
+    });
+}
+
 size_t PriceLevelContainer::getNextFreeBlockIndex()
 {
     assert(!freePriceLevels_.empty());
@@ -151,26 +168,32 @@ size_t PriceLevelContainer::getNextFreeBlockIndex()
     return freeBlockIndex;
 }
 
+#define LIKELY(condition) __builtin_expect(static_cast<bool>(condition), 1)
+#define UNLIKELY(condition) __builtin_expect(static_cast<bool>(condition), 0)
+
 void PriceLevelContainer::add(const MDLevel2Record &order)
 {
     auto pxLevel = priceLevelInfos_.find(order.price_);
-    if(priceLevelInfos_.end() == pxLevel){
-        size_t freeBlockIndex = getNextFreeBlockIndex();
+    PriceBlockInfo *info = nullptr;
+    size_t currBlockIndex = 0;
+    if(LIKELY(priceLevelInfos_.end() != pxLevel)) {
+        currBlockIndex = pxLevel->second.lastBlockIdx_;
+        info = pxLevel->second.lastBlock_; //info = getPriceBlockInfo(priceLevels_, currBlockIndex);
+    }else{
+        currBlockIndex = getNextFreeBlockIndex();
+        info = setPriceBlockInfo(priceLevels_, currBlockIndex,
+                          PriceBlockInfo(order.price_, currBlockIndex, currBlockIndex, EMPTY_ORDER_BIT_MASK));
 
         pxLevel = priceLevelInfos_.insert(
                 Price2PriceLevelInfosT::value_type(order.price_,
-                                                   PriceLevelInfo(freeBlockIndex, freeBlockIndex))).first;
-
-        setPriceBlockInfo(priceLevels_, freeBlockIndex,
-                          PriceBlockInfo(order.price_, freeBlockIndex, freeBlockIndex, EMPTY_ORDER_BIT_MASK));
+                                                   PriceLevelInfo(currBlockIndex, currBlockIndex, info, info))).first;
     }
 
-    size_t currBlockIndex = pxLevel->second.lastBlockIdx_;
-    PriceBlockInfo *info = getPriceBlockInfo(priceLevels_, currBlockIndex);
     assert(nullptr != info);
+    assert(0 < currBlockIndex);
 
     /// if last block is full - allocate new block
-    if(isBlockComplete(*info)){
+    if(UNLIKELY(isBlockComplete(*info))){
         size_t freeBlockIndex = getNextFreeBlockIndex();
 
         info->nextBlockIdx_ = freeBlockIndex;
@@ -178,14 +201,14 @@ void PriceLevelContainer::add(const MDLevel2Record &order)
 
         info = setPriceBlockInfo(priceLevels_, freeBlockIndex,
                           PriceBlockInfo(order.price_, currBlockIndex, freeBlockIndex, EMPTY_ORDER_BIT_MASK));
+        pxLevel->second.lastBlock_ = info;
     }
 
     /// add order at this index into priceLevels_
     uint32_t nextBitMaskIdx = nextBitMaskIndex(info->orderMask_);
     size_t  orderIndex = info->nextBlockIdx_ + nextBitMaskIdx;
-    OrderData orderData = {order.id_, order.qty_, order.price_};
-    setOrderData(priceLevels_, orderIndex, orderData);
     info->orderMask_ |= (1 << nextBitMaskIdx);
+    setOrderData(priceLevels_, orderIndex, {order.id_, order.qty_, order.price_});
 
     /// add order to the orderId->index map
     order2Index_.emplace(order.id_, orderIndex);
@@ -350,14 +373,21 @@ OrderData &PriceLevelContainer::orderData(size_t currIdx)
 }
 
 
-PriceLevelContainer2Cmp::PriceLevelContainer2Cmp(size_t orderCount)
+PriceLevelContainer2Cmp::PriceLevelContainer2Cmp(size_t orderCount): maxOrderCount_(orderCount)
 {
-    orderIds_.reserve(orderCount);
+    orderIds_.reserve(maxOrderCount_);
 }
 
 PriceLevelContainer2Cmp::~PriceLevelContainer2Cmp()
 {
 
+}
+
+void PriceLevelContainer2Cmp::clear()
+{
+    priceLevels_.clear();
+    orderIds_.clear();
+    orderIds_.reserve(maxOrderCount_);
 }
 
 void PriceLevelContainer2Cmp::add(const MDLevel2Record &order)
@@ -390,6 +420,7 @@ void PriceLevelContainer2Cmp::remove(const MDLevel2Record &order)
 
 void PriceLevelContainer2Cmp::update(const MDLevel2Record &order)
 {
+    throw std::runtime_error("Not implemented!");
 }
 
 PriceLevelContainer2Cmp::PriceLevelIterator2Cmp PriceLevelContainer2Cmp::begin()
@@ -408,11 +439,12 @@ PriceLevelContainer2Cmp::PriceLevelIterator2Cmp PriceLevelContainer2Cmp::end()
 
 size_t PriceLevelContainer2Cmp::getNext(size_t currIdx)const
 {
-
+    throw std::runtime_error("Not implemented!");
+    return 0;
 }
 OrderData &PriceLevelContainer2Cmp::orderData(size_t currIdx)
 {
-
+    throw std::runtime_error("Not implemented!");
 }
 
 PriceLevelContainer2Cmp::PriceLevelIterator2Cmp::PriceLevelIterator2Cmp(

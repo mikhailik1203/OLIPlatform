@@ -12,7 +12,7 @@ include_directories(. ../include
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../../../lib/${CMAKE_BUILD_TYPE})
 
-set (CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -march=native -mtune=native ") #-pg
+set (CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -march=native -mtune=native") #-pg
 message (${CMAKE_CXX_FLAGS_RELEASE})
 
 set(SOURCE_FILES MatchingEngine.cpp MatchingEngine.h MatchingEngineDef.h MEOrderBookCache.cpp
