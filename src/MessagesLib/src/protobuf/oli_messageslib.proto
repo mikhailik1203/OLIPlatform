@@ -1,0 +1,278 @@
+syntax = "proto3";
+
+package oli.msg;
+
+enum MessageType{
+    invalid_messageType = 0;
+    
+    /// system messages 1-99
+    SsnLogonMsg_messageType = 1; 
+    SsnHeartBeatMsg_messageType = 2; 
+    SsnResendRequestMsg_messageType = 3; 
+    SsnSequenceChangeMsg_messageType = 4;
+    SsnLogoutMsg_messageType = 5;
+    SsnRejectMsg_messageType = 6;
+    SsnRetransmittedMsg_messageType = 7;
+    topSessionLevelMsg_messageType = 99; 
+    
+    /// client messages 100-599
+    clntNewOrderRequest_messageType = 100;
+    clntOrderReplaceRequest_messageType = 101;
+    clntOrderCancelRequest_messageType = 102;
+    
+    /// orderBook messages 600-799
+    obCancelOrder_messageType = 600;
+    obCancelAllOrders_messageType = 601;
+    obBookChanges_messageType = 602;
+    obBookChange_messageType = 603;
+    
+    /// limitChecker messages 800-999
+    lcOrderCancel_messageType = 800;
+    lcCancelAllOrders_messageType = 801;
+    
+    /// securityMaster messages 1000-1199
+    smSecurityData_messageType = 1000;
+    smSecGroupData_messageType = 1001;
+    smMarketData_messageType = 1002;
+    smMarketStatusUpdate_messageType = 1003;
+    
+    /// userManager messages 1200-1399
+    umAccountData_messageType = 1200;
+    umAccountStatusUpdate_messageType = 1201;
+    
+    /// matchingEngine messages 1400-1599
+    meOrderMatched_messageType = 1400;
+    
+    /// positionManager messages 1600-1799
+    pmNewOrderRequest_messageType = 1600;
+    
+    /// OMS messages 1800-1999
+    omsNewOrder_messageType = 1800;
+    omsOrderStatus_messageType = 1801;
+    omsCancelOrder_messageType = 1802;
+    omsReplaceOrder_messageType = 1803;
+    omsTradeReject_messageType = 1804;
+    omsTradeCorrectReject_messageType = 1805;
+    
+    /// OrderBlotter messages 2000-2199
+    obSubscription_messageType = 2000;
+    
+    /// MarketData messages 2200-2399
+    mdSubscription_messageType = 2200;
+    
+    /// MDRates messages 2400-2599
+    mdrSubscription_messageType = 2400;
+    
+    /// PlatformManagement messages 2600-2799
+    pmNotification_messageType = 2600;
+    
+    /// Orchestrator messages 2800-2999
+    oInstanceStop_messageType = 2800;
+        
+    total_messageType = 3000;
+}
+
+message MessageHeaderData {
+    int32 protocolVersionMajor = 1; 
+    int32 protocolVersionMinor = 2;
+
+    int32 channelId = 3;
+    MessageType type = 4;
+    
+    int64 msgSequenceId = 5;
+
+    string clientName = 6;
+    string sessionName = 7;
+    string channelName = 8;
+
+    bytes messageData = 9;
+}
+
+message SsnLogonMsg{
+    int64 lastReceivedSeqId = 3;
+    int64 nextExpectedSeqId = 4;
+    int32 heartBeatInterval = 5;
+}
+
+message SsnHeartBeatMsg{
+    int32 tst = 3;
+}
+
+message SsnResendRequestMsg{
+    int64 fromSequenceId = 3;
+    int64 toSequenceId = 4;
+}
+
+message SsnSequenceChangeMsg{
+    int64 nextExpectedId = 3;
+}
+
+message SsnLogoutMsg{
+    string reason = 3;
+}
+
+message SsnRejectMsg{
+    int64 rejectedMsgSeqNumId = 3;
+    string rejectReason = 4;
+}
+
+message SsnRetransmittedMsg{
+    string msg = 3;
+}
+
+enum InstrumentType{
+    invalidInstrumentType = 0;
+    stockInstrumentType = 1;
+}
+
+
+message InstrumentDetails{
+    uint64 id = 2;
+    string name = 3;
+    InstrumentType type = 4;
+}
+
+enum OrderSide {
+    invalidSide = 0;    
+    buySide = 1;
+    sellSide = 2;
+}
+
+enum OrderType{
+    invalidOrderType = 0;
+    marketOrderType = 1;
+    limitOrderType = 2;
+    stopOrderType = 3;
+}
+
+enum OrderStatus{
+    invalidOrderStatus = 0;
+    newOrderStatus = 1;
+    canceledOrderStatus = 2;
+    filledOrderStatus = 3;
+    pendingNewOrderStatus = 4;
+}
+
+message ClntNewOrderRequestMsg {
+    string clientRequestId = 3;
+  
+    OrderSide side = 4;
+    OrderType type = 5;
+        
+    uint32 qtyDigits = 6;
+    uint32 orderQty = 7;
+    uint32 priceDigits = 8;
+    uint32 orderPrice = 9;
+
+    uint64 instrumentId = 11;
+}
+
+message ClntCancelOrderRequestMsg {
+    string clientRequestId = 3;
+}
+
+message ClntReplaceOrderRequestMsg {
+    string clientRequestId = 3;
+    string clientOriginalRequestId = 4;
+    uint64 originalOrderId = 5;
+    
+
+    uint32 qtyDigits = 6;
+    uint32 newOrderQty = 7;
+    uint32 priceDigits = 8;
+    uint32 newOrderPrice = 9;
+}
+
+/// Message published by OMS to notify about new order
+message OMSNewOrderMsg {
+    uint64 orderId = 3;
+    uint64 instrumentId = 4;
+    uint32 price = 5;
+    uint32 volumeLeft = 6;
+    OrderSide side = 7;
+    OrderType ordType = 8;
+}
+
+/// Message published by OMS to notify about changes in order
+message OMSChangeOrderMsg {
+    uint64 oldOrderId = 3;
+    uint64 newOrderId = 4;
+    uint64 instrumentId = 5;
+    uint32 oldPrice = 6;
+    uint32 newPrice = 7;
+    uint32 oldVolumeLeft = 8;
+    uint32 newVolumeLeft = 9;
+    OrderSide side = 10;
+}
+
+/// Message published by OMS to notify about canceling order
+message OMSCancelOrderMsg {
+    uint64 orderId = 3;
+    uint64 instrumentId = 4;
+    uint32 price = 5;
+    uint32 volumeLeft = 6;
+    OrderSide side = 7;
+}
+/// Message published by OMS to notify about new state of the order
+message OMSOrderStatusMsg {
+    uint64 orderId = 3;
+    OrderStatus status = 7;
+}
+
+message OMSTradeRejectMsg {
+    uint64 tradeId = 3;
+    uint64 orderId = 4;
+    uint32 rejectReason = 5;
+}
+
+message OMSTradeCorrectRejectMsg {
+    uint64 tradeId = 3;
+    uint64 orderId = 4;
+    uint32 rejectReason = 5;
+}
+
+/// Message published by MatchingEngine to notify new match
+message MEOrdersMatchedMsg {
+    uint64 instrumentId = 1;
+    uint64 matchId = 2;
+    uint64 bidOrderId = 3;
+    uint64 askOrderId = 4;
+    uint32 bidPrice = 5;
+    uint32 askPrice = 6;
+    uint32 matchedQty = 7;
+}
+
+enum OBookChangeType{
+    invalid_OBookChangeType = 0;
+    add_OBookChangeType = 1;
+    change_OBookChangeType = 2;
+    delete_OBookChangeType = 3;
+};
+
+
+/// Message published by OrderBook to notify changed in book
+message OBBookChangeMsg {
+    uint64 orderId = 2;
+    OBookChangeType type = 3;
+    uint64 instrumentId = 4;
+    uint32 price = 5;
+    uint32 volume = 6;
+    OrderSide side = 7;
+    uint32 prevPrice = 8;
+    uint32 prevVolume = 9;
+}
+
+/// Message published by OrderBook to notify changed in bid&ask books
+message OBBookChangesMsg {
+    uint64 instrumentId = 3;    
+    OBookChangeType bidType = 4;
+    OBookChangeType askType = 5;
+    uint32 bidPrice = 6;
+    uint32 bidVolume = 7;
+    uint32 prevBidPrice = 8;
+    uint32 prevBidVolume = 9;
+    uint32 askPrice = 10;
+    uint32 askVolume = 11;
+    uint32 prevAskPrice = 12;
+    uint32 prevAskVolume = 13;
+}
